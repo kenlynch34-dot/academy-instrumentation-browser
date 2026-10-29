@@ -69,9 +69,13 @@ services:
     build:
       context: services/react
       dockerfile: Dockerfile
+      args:
+        HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
     image: react:latest
     ports:
       - "10114:80"
+    depends_on:
+      - backend-for-frontend
 
   web:
     build:
@@ -88,5 +92,7 @@ services:
     ports:
       - "8080:80" # Expose port 8080 for Nginx
       - "10113:10113"
+    depends_on:
+      - backend-for-frontend
   
 

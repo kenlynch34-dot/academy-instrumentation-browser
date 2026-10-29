@@ -1,16 +1,18 @@
 import { useState } from "react";
 import {features} from './features';
-
+import {getSession, updateExpireTime} from './session-management';
+import {getUserName} from './user-identity';
 export default function Meminator() {
 
-    const [image, setImage] = useState<Blob | null>(null);
+    const [image, setImage] = useState<{ blob: Blob, url: string } | null>(null);
     const [phrase, setPhrase] = useState<string>('');
     const [fetching, setFetching] = useState<boolean>(false);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
+        updateExpireTime();
         fetchMeme();
-    };
+      };
 
     const fetchMeme = async () => {
         setFetching(true);
@@ -22,7 +24,11 @@ export default function Meminator() {
                 },
                 body: phrase ? JSON.stringify({phrase: phrase}) : null
             });
-            setImage(await response.blob());
+            const blob = await response.blob();
+            setImage((previous) => {
+                if (previous) URL.revokeObjectURL(previous.url); // free the last meme's memory
+                return { blob, url: URL.createObjectURL(blob) };
+            });
         } catch (e) {
             alert("that was bad...");
         } finally {
@@ -30,6 +36,7 @@ export default function Meminator() {
         }
     };
 
+    
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         const phraseText = event.target.value;
@@ -42,6 +49,7 @@ export default function Meminator() {
 
     return (
         <div>
+            <p id="user-session">{getUserName()} = {getSession()}</p>
             { features.ALLOW_USER_QUESTIONS ?
                 <>
                     <h3>Enter a phrase, then click 'GO'!</h3>
@@ -57,8 +65,13 @@ export default function Meminator() {
             }
             <div>&nbsp;</div>
             <div className="block">
-                { image && <img src={URL.createObjectURL(image)} alt="meme" /> }
+                { image && <img src={image.url} alt="meme" /> }
             </div>
+            { image?.blob.type.startsWith('image/') &&
+                <div className="block">
+                    <a id="download-meme" href={image.url} target="_blank" rel="noopener">Download image</a>
+                </div>
+            }
         </div>
     );
 }
