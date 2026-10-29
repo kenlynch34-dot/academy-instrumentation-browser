@@ -7,6 +7,9 @@ export default defineConfig({
     environment: 'jsdom'
   },
   plugins: [react()],
+  // read .env from the repo root and expose HONEYCOMB_* vars to the browser
+  envDir: '../..',
+  envPrefix: ['VITE_', 'HONEYCOMB_'],
   server: {
     proxy: {
       '/api': {

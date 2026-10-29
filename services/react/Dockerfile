@@ -6,6 +6,9 @@ COPY . .
 
 RUN npm install
 
+ARG HONEYCOMB_API_KEY
+ENV HONEYCOMB_API_KEY=$HONEYCOMB_API_KEY
+
 RUN npm run build
 
 FROM nginx:stable-alpine
